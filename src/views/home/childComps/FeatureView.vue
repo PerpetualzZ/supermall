@@ -1,6 +1,8 @@
 <template>
-  <div>
-
+  <div class="feature">
+    <a href="https://www.bilibili.com/">
+      <img src="~assets/img/home/recommend_bg.jpg" alt="">
+    </a>
   </div>
 </template>
 
@@ -12,5 +14,7 @@
 </script>
 
 <style scoped>
-
+  .feature img {
+    width: 100%
+  }
 </style>

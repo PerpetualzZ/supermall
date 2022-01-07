@@ -25,6 +25,7 @@ body {
   background: var(--color-background);
   color: var(--color-text);
   /* rem vw/vh */
+  /* vw:1vw 等于视口宽度的1%Vh:1vh 等于视口高度的1% */
   width: 100vw;
 }
 
