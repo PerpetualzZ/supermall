@@ -42,6 +42,9 @@
         pullUpLoad: this.pullUpLoad,
         click: true,
         // observeImage: true  // 监听调用refresh
+        mouseWheel: true,// 开启鼠标滚轮
+        disableMouse: false,// 启用鼠标拖动
+        disableTouch: false, // 启用手指触摸
       })
 
       // 2.监听滚动的位置
@@ -72,6 +75,10 @@
       finishPullUp() {
         this.scroll && this.scroll.finishPullUp()
       },
+
+      getScrollY() {
+        return this.scroll ? this.scroll.y : 0
+      }
     }
   }
 

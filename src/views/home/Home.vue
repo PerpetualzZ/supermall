@@ -82,13 +82,26 @@
         currentType: 'pop',
         isShowBackTop: false,
         tabOffsetTop: 0,
-        isTabFixed: false
+        isTabFixed: false,
+        saveY: 0
       }
     },
     computed: {
       showGoods() {
         return this.goods[this.currentType].list
       }
+    },
+    destroyed() {
+      console.log('home destroyed');
+    },
+    // 第一次进来时触发 activated
+    activated() {
+      // this.$refs.scroll.scrollTo(0, this.saveY, 0)
+      // this.$refs.scroll.refresh() // 刷新
+    },
+    // 离开时触发
+    deactivated() {
+      // this.saveY = this.$refs.scroll.getScrollY()
     },
     created() {
       // 1.请求多个数据
@@ -147,7 +160,7 @@
 
       // $el获取Vue实例关联的DOM元素；
       swiperImageLoad() {
-        this.tabOffsetTop =  this.$refs.tabControl2.$el.offsetTop;
+        this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop;
       },
 
       /**
