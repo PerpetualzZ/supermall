@@ -27,6 +27,7 @@
 </template>
 <script>
   export default {
+    name: 'DetailGoodsInfo',
     props: {
       detailInfo: {
         type: Object,
@@ -43,7 +44,8 @@
     },
     methods: {
       loadImg() {
-        // 所有的图片都加载完了 那么进行一次回调就可以了
+        // 判断所有的图片都加载完了 那么进行一次回调就可以了
+        // this.counter =+ 1 ==> ++this.counter
         if (++this.counter === this.imagesLength) {
           this.$emit("loadImg");
         }

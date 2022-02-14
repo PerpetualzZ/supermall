@@ -1,24 +1,16 @@
 <template>
   <div id="home">
-    <nav-bar class="home-nav"><div slot="center">购物街</div></nav-bar>
-    <tab-control :titles="['流行', '新款', '精选']"
-                  @tabClick="tabClick"
-                  ref="tabControl1"
-                  class="tab-control"
-                  v-show="isTabFixed"></tab-control>
-    <scroll class="content"
-            ref="scroll"
-            :probe-type="3"
-            @scroll="contentScroll"
-            :pull-up-load="true"
-            @pullingUp='loadMore'>
+    <nav-bar class="home-nav">
+      <div slot="center">购物街</div>
+    </nav-bar>
+    <tab-control :titles="['流行', '新款', '精选']" @tabClick="tabClick" ref="tabControl1" class="tab-control"
+      v-show="isTabFixed"></tab-control>
+    <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll" :pull-up-load="true"
+      @pullingUp='loadMore'>
       <home-swiper :banners="banners" @swiperImageLoad="swiperImageLoad"></home-swiper>
       <recommend-view :recommends="recommends"></recommend-view>
       <feature-view></feature-view>
-      <tab-control :titles="['流行', '新款', '精选']"
-                   @tabClick="tabClick"
-                   ref="tabControl2"
-                   ></tab-control>
+      <tab-control :titles="['流行', '新款', '精选']" @tabClick="tabClick" ref="tabControl2"></tab-control>
       <goods-list :goods="showGoods"></goods-list>
     </scroll>
 
@@ -43,9 +35,14 @@
   import BackTop from 'components/content/backTop/BackTop'
 
   // 数据
-  import {getHomeMultidata,getHomeGoods} from 'network/home'
+  import {
+    getHomeMultidata,
+    getHomeGoods
+  } from 'network/home'
 
-  import {debounce} from 'common/utils.js'
+  import {
+    debounce
+  } from 'common/utils.js'
 
   export default {
     name: "Home",
@@ -83,7 +80,8 @@
         isShowBackTop: false,
         tabOffsetTop: 0,
         isTabFixed: false,
-        saveY: 0
+        saveY: 0,
+        itemImgListener: null
       }
     },
     computed: {
@@ -101,7 +99,11 @@
     },
     // 离开时触发
     deactivated() {
+      // 1.保存Y值
       // this.saveY = this.$refs.scroll.getScrollY()
+
+      // 2.取消全局事件的监听
+      this.$bus.$off('itemImgLoad', this.itemImgListener)
     },
     created() {
       // 1.请求多个数据
@@ -114,18 +116,16 @@
     },
 
     mounted() {
-      // 1.图片加载完成的事件监听
-      const refresh = debounce(this.$refs.scroll.refresh, 200)
-      this.$bus.$on('itemImageLoad', () => {
-        refresh()
-      })
+      // 1.图片加载完成的事件监听 防抖
+      let newRefesh = debounce(this.$refs.scroll.refresh, 200)
+      // 2.对我们监听的事件进行保存
+      this.itemImgListener = () => {
+        newRefesh()
+      }
+      this.$bus.$on('itemImgLoad', this.itemImgListener)
     },
 
     methods: {
-      /**
-       * 事件监听相关的方法
-       */
-
       tabClick(index) {
         switch (index) {
           case 0:
@@ -228,4 +228,5 @@
     position: relative;
     z-index: 9;
   }
+
 </style>
