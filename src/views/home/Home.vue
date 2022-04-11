@@ -3,19 +3,35 @@
     <nav-bar class="home-nav">
       <div slot="center">购物街</div>
     </nav-bar>
-    <tab-control :titles="['流行', '新款', '精选']" @tabClick="tabClick" ref="tabControl1" class="tab-control"
-      v-show="isTabFixed"></tab-control>
-    <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll" :pull-up-load="true"
-      @pullingUp='loadMore'>
-      <home-swiper :banners="banners" @swiperImageLoad="swiperImageLoad"></home-swiper>
-      <recommend-view :recommends="recommends"></recommend-view>
-      <feature-view></feature-view>
-      <tab-control :titles="['流行', '新款', '精选']" @tabClick="tabClick" ref="tabControl2"></tab-control>
-      <goods-list :goods="showGoods"></goods-list>
+    <tab-control
+            :titles="['流行', '新款', '精选']"
+            @tabClick="tabClick"
+            ref="tabControl1"
+            class="tab-control"
+            v-show="isTabFixed"></tab-control>
+    <scroll
+            class="content"
+            ref="scroll"
+            :probe-type="3"
+            @scroll="contentScroll"
+            :pull-up-load="true"
+            @pullingUp='loadMore'>
+      <home-swiper
+            :banners="banners"
+            @swiperImageLoad="swiperImageLoad" />
+      <recommend-view
+            :recommends="recommends" />
+      <feature-view />
+      <tab-control
+            :titles="['流行', '新款', '精选']" @tabClick="tabClick" ref="tabControl2" />
+      <goods-list
+            :goods="showGoods" />
     </scroll>
 
     <!-- native 在我们需要监听一个组件的原生事件时 必须给对应的事件加上.native修饰符 才能进行监听 -->
-    <back-top @click.native="backClick" v-show="isShowBackTop"></back-top>
+    <back-top
+            @click.native="backClick"
+            v-show="isShowBackTop"/>
 
   </div>
 </template>
@@ -35,14 +51,10 @@
   import BackTop from 'components/content/backTop/BackTop'
 
   // 数据
-  import {
-    getHomeMultidata,
-    getHomeGoods
-  } from 'network/home'
+  import { getHomeMultidata, getHomeGoods } from 'network/home'
+  import { debounce } from 'common/utils';
 
-  import {
-    debounce
-  } from 'common/utils.js'
+  // import { itemListenerMixin } from 'common/mixin'
 
   export default {
     name: "Home",
@@ -63,48 +75,67 @@
         banners: [],
         recommends: [],
         goods: {
-          'pop': {
-            page: 0,
-            list: []
-          },
-          'new': {
-            page: 0,
-            list: []
-          },
-          'sell': {
-            page: 0,
-            list: []
-          },
+          'pop': {page: 0, list: [] },
+          'new': {page: 0, list: [] },
+          'sell': {page: 0, list: [] },
         },
         currentType: 'pop',
-        isShowBackTop: false,
-        tabOffsetTop: 0,
-        isTabFixed: false,
-        saveY: 0,
-        itemImgListener: null
+        isShowBackTop: false, // 是否显示返回顶部按钮
+        tabOffsetTop: 0, //tabControl距离顶部的距离
+        isTabFixed: false, //是否显示吸顶
+        saveY: 0, // 记录页面离开scrollY的距离
+        imgItemListener: null, //控制首页商品图片加载显示的listener
       }
     },
+
     computed: {
       showGoods() {
         return this.goods[this.currentType].list
       }
     },
+
+    // mixins: [itemListenerMixin],
+    mounted() {
+      // 1.监听事件总线中商品图片全部加载完成
+      // 运用函数防抖动
+      const refresh = debounce(this.$refs.scroll.refresh, 500)
+
+      // 对监听的事件进行保存
+      this.imgItemListener = () => {
+        this.$refs.scroll.refresh()
+        refresh()
+      }
+      // 监听item中图片加载完成
+      this.$bus.$on('itemImgLoad', this.imgItemListener);
+
+      // 2. 获取tabControl的offsetTop，做tabControl的吸顶效果
+      // 注意：swiper图片加载的过程会对offset造成影响，所以需要监听swiper图片加载完成才能获取offsetTop
+      // this.tabOffsetTop = this.$refs.tabControl.$el.offsetTop;
+    },
+
     destroyed() {
       console.log('home destroyed');
     },
-    // 第一次进来时触发 activated
-    activated() {
-      // this.$refs.scroll.scrollTo(0, this.saveY, 0)
-      // this.$refs.scroll.refresh() // 刷新
-    },
-    // 离开时触发
-    deactivated() {
-      // 1.保存Y值
-      // this.saveY = this.$refs.scroll.getScrollY()
 
-      // 2.取消全局事件的监听
-      this.$bus.$off('itemImgLoad', this.itemImgListener)
+    // 第一次进来时触发 activated 保留页面的滚动位置
+    activated() {
+      if( this.$refs.scroll){
+        this.$refs.scroll.scrollTo(0, this.saveScrollY);
+        this.$refs.scroll.refresh();
+      }
+      // this.$refs.scroll.scrollTo(0, this.saveScrollY, 0);
+      // this.$refs.scroll.refresh();
     },
+
+    // 离开时触发 保留页面的滚动位置
+    deactivated() {
+      // 1.保存Y值  页面失活时获取页面Y轴滚动的位置
+      this.saveY = this.$refs.scroll.getScrollY()
+
+      // 2.取消首页事件总线的监听，与详情页的推荐数据列表区分开
+      this.$bus.$off('itemImgLoad', this.imgItemListener)
+    },
+
     created() {
       // 1.请求多个数据
       this.getHomeMultidata()
@@ -115,17 +146,9 @@
       this.getHomeGoods('sell')
     },
 
-    mounted() {
-      // 1.图片加载完成的事件监听 防抖
-      let newRefesh = debounce(this.$refs.scroll.refresh, 200)
-      // 2.对我们监听的事件进行保存
-      this.itemImgListener = () => {
-        newRefesh()
-      }
-      this.$bus.$on('itemImgLoad', this.itemImgListener)
-    },
-
+    // 监听事件处理方法
     methods: {
+      // 注意障眼法设置两个tabControl内部的currentIndex一致
       tabClick(index) {
         switch (index) {
           case 0:
@@ -138,6 +161,7 @@
             this.currentType = 'sell'
             break;
         }
+
         this.$refs.tabControl1.currentIndex = index
         this.$refs.tabControl2.currentIndex = index
       },
@@ -159,6 +183,7 @@
       },
 
       // $el获取Vue实例关联的DOM元素；
+      // 当轮播图加载成功时获取tabControlOffsetTop
       swiperImageLoad() {
         this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop;
       },
@@ -166,6 +191,7 @@
       /**
        * 网络请求相关的方法
        */
+      // 1.获取首页轮播图以及推荐数据
       getHomeMultidata() {
         getHomeMultidata().then(res => {
           // console.log(res);
@@ -173,13 +199,15 @@
           this.recommends = res.data.recommend.list
         })
       },
+
+      // 2.获取商品数据
       getHomeGoods(type) {
         const page = this.goods[type].page + 1
         getHomeGoods(type, page).then(res => {
           this.goods[type].list.push(...res.data.list)
           this.goods[type].page += 1
 
-          // 完成上拉加载更多
+          // 下拉刷新更多
           this.$refs.scroll.finishPullUp()
         })
       }

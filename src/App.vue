@@ -4,7 +4,7 @@
     <!-- exclude 把 Detail组件 排除到保留状态之外-->
     <!-- v-if="$route.meta.footShow" 在Detail组件里让底部导航不渲染 -->
     <keep-alive exclude="Detail">
-      <router-view></router-view>
+      <router-view></router-view> <!-- 路由匹配到的组件将显示在这里 -->
     </keep-alive>
     <main-tab-bar v-if="$route.meta.footShow"></main-tab-bar>
   </div>

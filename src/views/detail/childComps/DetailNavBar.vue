@@ -8,8 +8,7 @@
         <div class="title-item"
              v-for="(item, index) in titles" :key="index"
              :class="{active: index === currentIndex}"
-             @click="titleClick(index)">
-          {{item}}
+             @click="titleClick(index)">{{item}}
         </div>
       </div>
     </nav-bar>
@@ -33,6 +32,7 @@
     methods: {
       titleClick(index) {
         this.currentIndex = index
+        this.$emit('titleClick', index)
       },
       backClick() {
         this.$router.back()
